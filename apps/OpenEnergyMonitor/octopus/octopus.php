@@ -422,6 +422,7 @@ $("#advanced-toggle").click(function () {
     }
 });
 
+/*
 $('#placeholder').bind("plothover", function (event, pos, item) {
     if (item) {
         var z = item.dataIndex;
@@ -456,7 +457,9 @@ $('#placeholder').bind("plothover", function (event, pos, item) {
         }
     } else $("#tooltip").remove();
 });
+*/
 
+/*
 $('#placeholder').bind("plotselected", function (event, ranges) {
     var start = ranges.xaxis.from;
     var end = ranges.xaxis.to;
@@ -466,6 +469,7 @@ $('#placeholder').bind("plotselected", function (event, ranges) {
     graph_draw();
     setTimeout(function() { panning = false; }, 100);
 });
+*/
 
 $(".viewcostenergy").click(function(){
     var view = $(this).html();
@@ -755,6 +759,7 @@ function resize() {
     placeholder_bound.height(height);
     placeholder.height(height-top_offset);
 
+// This should be CSS media query
     if (width<=500) {
         $(".electric-title").css("font-size","14px");
         $(".power-value").css("font-size","36px");
@@ -780,8 +785,6 @@ $(function() {
         if (window_width<450) flot_font_size = 10;
 
         resize();
-
-//        graph_draw();
     })
 })
 
