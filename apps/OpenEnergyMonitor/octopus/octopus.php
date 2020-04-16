@@ -8,15 +8,11 @@
 <script type="text/javascript" src="<?php echo $path; ?>Modules/app/Lib/config.js?v=<?php echo $v; ?>"></script>
 <script type="text/javascript" src="<?php echo $path; ?>Modules/app/Lib/feed.js?v=<?php echo $v; ?>"></script>
 
-<script type="text/javascript" src="<?php echo $path; ?>Lib/flot/jquery.flot.min.js?v=<?php echo $v; ?>"></script>
-<script type="text/javascript" src="<?php echo $path; ?>Lib/flot/jquery.flot.time.min.js?v=<?php echo $v; ?>"></script>
-<script type="text/javascript" src="<?php echo $path; ?>Lib/flot/jquery.flot.selection.min.js?v=<?php echo $v; ?>"></script>
-<script type="text/javascript" src="<?php echo $path; ?>Lib/flot/jquery.flot.stack.min.js"></script>
-<script type="text/javascript" src="<?php echo $path; ?>Lib/flot/date.format.js?v=<?php echo $v; ?>"></script>
 <script type="text/javascript" src="<?php echo $path; ?>Modules/app/Lib/vis.helper.js?v=<?php echo $v; ?>"></script>
 
-<style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/4.7.0/echarts.min.js" integrity="sha256-eKrx6Ly6b0Rscx/PSm52rJsvK76RJyv18Toswq+OLSs=" crossorigin="anonymous"></script>
 
+<style>
 .electric-title {
     font-weight:bold;
     font-size:22px;
@@ -63,14 +59,10 @@
   }
   #history-title {display:none;}
 }
-
 </style>
-
 <div style="font-family: Montserrat, Veranda, sans-serif;">
 <div id="app-block" style="display:none">
-
   <div id="octopus-realtime" class="col1"><div class="col1-inner">
-
     <div class="block-bound">
       <div class="bluenav openconfig"><i class="icon-wrench icon-white"></i></div>
       <!--<div class="bluenav viewcostenergy">VIEW COST</div>-->
@@ -122,7 +114,6 @@
         <span class="bluenav time" time='W' title='Since midnight Sunday'>Week</span>
         <span class="bluenav time" time='Y' title='Yesterday'>Yesterday</span>
         <span class="bluenav time" time='T' title='Today since midnight'>Today</span>-->
-        
         <select class="time-select">
             <option value='1440'>Previous 60 days</option>
             <option value='720'>Previous 30 days</option>
@@ -141,8 +132,8 @@
     </div>
 
     <div style="background-color:rgba(68,179,226,0.1); padding:10px;">
-      <div id="placeholder_bound" style="width:100%; height:500px;">
-        <div id="placeholder" style="height:500px"></div>
+      <div id="placeholder_bound" style="width:100%; height:600px;">
+        <div id="placeholder" style="height:600px"></div>
       </div>
     </div>
 
@@ -400,8 +391,8 @@ function updater()
 // -------------------------------------------------------------------------------
 // The buttons for these graph events are hidden when in historic mode 
 // The events are loaded at the start here and dont need to be unbinded and binded again.
-$("#zoomout").click(function () {view.zoomout(); graph_load(); graph_draw(); });
-$("#zoomin").click(function () {view.zoomin(); graph_load(); graph_draw(); });
+//$("#zoomout").click(function () {view.zoomout(); graph_load(); graph_draw(); });
+//$("#zoomin").click(function () {view.zoomin(); graph_load(); graph_draw(); });
 $('#right').click(function () {view.pan_speed = 0.5; view.panright(); graph_load(); graph_draw(); });
 $('#left').click(function () {view.pan_speed = 0.5; view.panleft(); graph_load(); graph_draw(); });
 $('#fastright').click(function () {view.pan_speed = 1.0; view.panright(); graph_load(); graph_draw(); });
@@ -410,14 +401,12 @@ $('#fastleft').click(function () {view.pan_speed = 1.0; view.panleft(); graph_lo
 
 $('.time').click(function () {
     setPeriod($(this).attr("time"));
-    // view.timewindow(period);
     graph_load();
     graph_draw();
 });
 
 $('.time-select').change(function () {
     setPeriod($(this).val());
-    // view.timewindow(period);
     graph_load();
     graph_draw();
 });
@@ -471,12 +460,10 @@ $('#placeholder').bind("plothover", function (event, pos, item) {
 $('#placeholder').bind("plotselected", function (event, ranges) {
     var start = ranges.xaxis.from;
     var end = ranges.xaxis.to;
-    panning = true; 
-
+    panning = true;
     view.start = start; view.end = end;
     graph_load();
     graph_draw();
-    
     setTimeout(function() { panning = false; }, 100);
 });
 
@@ -512,7 +499,7 @@ $(".cost").click(function() {
 // - graph_draw
 // - resize
 
-function graph_load() 
+function graph_load()
 {
     $(".power-graph-footer").show();
     var interval = 1800;
@@ -527,28 +514,17 @@ function graph_load()
     var use_kwh = [];
     if (solarpv_mode) use_kwh = feed.getdata(feeds["use_kwh"].id,view.start,view.end,interval,0,0);
     var solar_kwh = [];
-    if (solarpv_mode) solar_kwh = feed.getdata(feeds["solar_kwh"].id,view.start,view.end,interval,0,0);    
+    if (solarpv_mode) solar_kwh = feed.getdata(feeds["solar_kwh"].id,view.start,view.end,interval,0,0);
     data = {};
 
     data["agile"] = []
     data["outgoing"] = []
     if (config.app.region!=undefined && regions_import[config.app.region.value]!=undefined) {
-        //Add 30 minutes to each reading to get a stepped graph
-        agile = feed.getdataremote(regions_import[config.app.region.value],view.start,view.end,interval);
-        for (var z in agile) {
-            data["agile"].push(agile[z]);
-            data["agile"].push([agile[z][0]+(intervalms-1), agile[z][1]]);
-        }
-
-        outgoing =  feed.getdataremote(regions_outgoing[config.app.region.value],view.start,view.end,interval);
-        for (var z in outgoing) {
-            data["outgoing"].push(outgoing[z]);
-            data["outgoing"].push([ outgoing[z][0]+(intervalms-1), outgoing[z][1]]);
-        }
+        data["agile"] = feed.getdataremote(regions_import[config.app.region.value],view.start,view.end,interval);
+        data["outgoing"] = feed.getdataremote(regions_outgoing[config.app.region.value],view.start,view.end,interval);
     }
     // Invert export tariff
     for (var z in data["outgoing"]) data["outgoing"][z][1] *= -1;
-
 
     data["use"] = [];
     data["import"] = [];
@@ -609,7 +585,7 @@ function graph_load()
                 // half hourly datasets for graph
                 data["use"].push([time,kwh_use]);
                 data["import"].push([time,kwh_import]);
-                data["export"].push([time,kwh_export*-1]);
+                data["export"].push([time,(kwh_export*-1)]);
                 data["solar_used"].push([time,kwh_solar_used]);
 
                 // energy totals
@@ -685,17 +661,19 @@ function graph_load()
     $("#octopus_totals").html(out);
 }
 
-function graph_draw() 
+var myChart;
+
+function graph_draw()
 {
     if (this_halfhour_index!=-1) {
-
         let kwh_last_halfhour = data["import"][this_halfhour_index][1];
         $("#kwh_halfhour").html(kwh_last_halfhour.toFixed(2)+"<span class='units'>kWh</span>");
 
         let cost_last_halfhour = data["import_cost"][this_halfhour_index][1]*100;
         $("#cost_halfhour").html("("+cost_last_halfhour.toFixed(2)+"<span class='units'>p</span>)");
 
-        let unit_price = data["agile"][2*this_halfhour_index][1]*1.05;
+	//1.05 to add on 5% VAT
+        let unit_price = data["agile"][this_halfhour_index][1]*1.05;
         $("#unit_price").html(unit_price.toFixed(2)+"<span class='units'>p</span>");
 
         $(".last_halfhour_stats").show();
@@ -703,49 +681,59 @@ function graph_draw()
         $(".last_halfhour_stats").hide();
     }
 
-    var bars = { show: true, align: "left", barWidth: 0.9*1800*1000, fill: 1.0, lineWidth:0 };
+    // based on prepared DOM, initialize echarts instance
+    myChart = echarts.init(document.getElementById('placeholder'));
 
-    graph_series = [];
-    if (view_mode=="energy") {
-        if (solarpv_mode) graph_series.push({label: "Used Solar", data:data["solar_used"], yaxis:1, color:"#bec745", stack: true, bars: bars});
-        graph_series.push({label: "Import", data:data["import"], yaxis:1, color:"#44b3e2", stack: true, bars: bars});
-        if (solarpv_mode) graph_series.push({label: "Export", data:data["export"], yaxis:1, color:"#dccc1f", stack: false, bars: bars});
+  // specify chart configuration item and data
+        var option = {
+	tooltip : { trigger: 'axis', position: function(pt) { return [pt[0],'10%'];} },
+toolbox: {
+feature:{ dataZoon: { yAxisIndex: 'none'}
+}},
 
-    }
-    else if (view_mode=="cost") {
-        if (solarpv_mode) graph_series.push({label: "Used Solar", data:data["solar_used_cost"], yaxis:1, color:"#bec745", stack: true, bars: bars});
-        graph_series.push({label: "Import", data:data["import_cost"], yaxis:1, color:"#44b3e2", stack: true, bars: bars});
-        if (solarpv_mode) graph_series.push({label: "Export", data:data["export_cost"], yaxis:1, color:"#dccc1f", stack: false, bars: bars});
-    }
-    // price signals
-    graph_series.push({label: "Agile", data:data["agile"], yaxis:2, color:"#fb1a80", lines: { show: true, align: "left", lineWidth:1}});
-    if (solarpv_mode) graph_series.push({label: "Outgoing", data:data["outgoing"], yaxis:2, color:"#941afb", lines: { show: true, align: "center", lineWidth:1}}); 
+dataZoom: [
+{ type: 'inside', start:0, end:100, minValueSpan:1800, maxValueSpan:3600 * 24 * 1000 * 7 }
+,{start:0, end:10}
+],
 
-    var options = {
-        xaxis: {
-            mode: "time", timezone: "browser", 
-            min: view.start, max: view.end, 
-            font: {size:flot_font_size, color:"#666"},
-            reserveSpace:false
-        },
-        yaxes: [
-            {position:'left', font: {size:flot_font_size, color:"#666"},reserveSpace:false},
-            {position:'left', alignTicksWithAxis:1, font:{size:flot_font_size, color:"#666"},reserveSpace:false}
-        ],
-        grid: {
-            show:true, 
-            color:"#aaa",
-            borderWidth:0,
-            hoverable: true, 
-            clickable: true,
-            // labelMargin:0,
-            // axisMargin:0
-            margin:{top:30}
-        },
-        selection: { mode: "x" },
-        legend:{position:"NW", noColumns:5}
-    }
-    $.plot($('#placeholder'),graph_series,options);
+            legend: {type:'plain', padding:4, itemGap:5 },
+            xAxis: [
+		{type: 'time',minInterval:1800,boundaryGap:false,
+axisLine: {onZero: true}, splitLine: {show: false}, splitArea: {show: false}}
+            ],
+            yAxis: [
+	{show:true, position:'left', type:'value', name:'Energy'},
+	{show:true, position:'right', type:'value', name:'Octopus Tariff'}
+],
+            series: [
+	 {name:"Used Solar", itemStyle:{color:"#bec745"}, type:'bar', yAxisIndex:0, stack:'a' }
+	,{name:"Import", itemStyle:{color:"#44b3e2"}, type:'bar', yAxisIndex:0, stack:'a'}
+	,{name:"Export", itemStyle:{color:"#dccc1f"}, type:'bar', yAxisIndex:0, stack:'a'}
+	,{name:"Agile Tariff", itemStyle:{color:"#fb1a80"}, type:'line', yAxisIndex:1}
+	,{name:"Outgoing", itemStyle:{color:"#941afb"}, type:'line', yAxisIndex:1}]
+        };
+
+if (view_mode=="energy") {
+        option.series[0].data=data["solar_used"];
+        option.series[1].data=data["import"];
+        option.series[2].data=data["export"];
+} else if (view_mode=="cost") {
+        option.series[0].data=data["solar_used_cost"];
+        option.series[1].data=data["import_cost"];
+        option.series[2].data=data["export_cost"];
+}
+
+option.series[3].data=data["agile"];
+option.series[4].data=data["outgoing"];
+
+// Remove anything solar related if needed
+if (solarpv_mode==false) {
+ option.remove(series[0]);
+ option.remove(series[2]);
+ option.remove(series[4]);
+}
+
+myChart.setOption(option);
 }
 
 // -------------------------------------------------------------------------------
@@ -770,7 +758,7 @@ function resize() {
     if (width<=500) {
         $(".electric-title").css("font-size","14px");
         $(".power-value").css("font-size","36px");
-        $(".halfhour-value").css("font-size","26px");  
+        $(".halfhour-value").css("font-size","26px");
     } else if (width<=724) {
         $(".electric-title").css("font-size","16px");
         $(".power-value").css("font-size","50px");
@@ -780,6 +768,8 @@ function resize() {
         $(".power-value").css("font-size","50px");
         $(".halfhour-value").css("font-size","40px");
     }
+
+    if (myChart) { myChart.resize(); }
 }
 
 $(function() {
@@ -791,7 +781,7 @@ $(function() {
 
         resize();
 
-        graph_draw();
+//        graph_draw();
     })
 })
 
